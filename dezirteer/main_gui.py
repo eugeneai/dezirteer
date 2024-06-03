@@ -29,9 +29,11 @@ from gui_support import set_all_ui_elements
 try:
     from Tkinter import *
     from Tkinter import messagebox
+    import Tkinter as tki
 except ImportError:
     from tkinter import *
     from tkinter import messagebox
+    import tkinter as tki
 try:
     import ttk
     py3 = False
@@ -195,8 +197,13 @@ class OperationWindow(Frame):
                 " -underline 0 -overstrike 0"
 
         import os
+
         CWD = os.getcwd()
-        # root.PhotoImage(opa.join(CWD, "dezirteer_icon.ico"))
+        try:
+            photo = tki.PhotoImage(file=opa.join(CWD, "dezirteer_icon.ico"))
+        except tki.TclError:
+            photo = tki.PhotoImage(file=opa.join(CWD, "dezirteer_icon.png"))
+        root.wm_iconphoto(False, photo)
         self.style = ttk.Style()
         if sys.platform == "win32":
             self.style.theme_use('winnative')
