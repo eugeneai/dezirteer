@@ -17,6 +17,7 @@ from matplotlib.figure import Figure
 from matplotlib.patches import Ellipse
 #from matplotlib.pyplot import errorbar
 from matplotlib.collections import LineCollection
+import os.path as opa
 
 from matplotlib.patches import Rectangle
 from tkinter import filedialog
@@ -39,15 +40,23 @@ except ImportError:
     py3 = True
 from math_module import *
 from import_export import *
-if platform != "darwin":
+if platform == "NT":
     import winsound
 
 def truncate(f, n):
     return floor(f * 10 ** n) / 10 ** n
 
+def get_app_data():
+    ad = os.getenv('APPDATA')
+    if ad is not None:
+        return opa.join(ad, "dezirteer")
+    ad = os.getenv("HOME")
+    if ad is not None:
+        return opa.join(ad, ".config", "dezirteer")
+
 def save_last_dir():
     global g_directory
-    dirname=os.getenv('APPDATA')+"\dezirteer"
+    dirname=get_app_data()
     completeName = os.path.join(dirname, "lastdir.dzrst")
     f = open(completeName, "w+")
     if isinstance(g_directory, str) and (g_directory != ""):
@@ -55,7 +64,7 @@ def save_last_dir():
     f.close()
 
 def get_last_dir():
-    dirname=os.getenv('APPDATA')+"\dezirteer"
+    dirname=get_app_data()
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     completeName = os.path.join(dirname, "lastdir.dzrst")
@@ -185,7 +194,9 @@ class OperationWindow(Frame):
         font9 = "-family {Segoe UI} -size 8 -weight bold -slant roman" \
                 " -underline 0 -overstrike 0"
 
-        root.iconbitmap("dezirteer_icon.ico")
+        import os
+        CWD = os.getcwd()
+        # root.PhotoImage(opa.join(CWD, "dezirteer_icon.ico"))
         self.style = ttk.Style()
         if sys.platform == "win32":
             self.style.theme_use('winnative')
@@ -1615,7 +1626,7 @@ class OperationWindow(Frame):
             step = 25
         else:
             step = 10
-        
+
         if log10(min_age) >= 2:
             x = -2
         else:
@@ -1936,7 +1947,7 @@ class OperationWindow(Frame):
             max_age = int(self.entAgeMaxCrop.get())
             max_conc_x = calc_ratio(float(self.entAgeMaxCrop.get()))[1]
             max_conc_y = calc_ratio(float(self.entAgeMaxCrop.get()))[0]
-        else:    
+        else:
             max_age = age_lim[1]
             max_conc_x = age_lim[3]
             max_conc_y = age_lim[5]
@@ -2111,7 +2122,7 @@ def main():
     if isinstance(last_dir, str):
         g_directory=last_dir
     else:
-        g_directory=os.getenv('APPDATA')+"\dezirteer"
+        g_directory=get_app_data()
     g_list_col_names = ['232Th/238U', '232/238Err 1s(Int)', '232/238Err 1s(Prop)',
                         '208Pb/232Th', '208/232Err 1s(Int)', '208/232Err 1s(Prop)',
                         '207Pb/206Pb', '207/206Err 1s(Int)', '207/206Err 1s(Prop)',
