@@ -944,7 +944,7 @@ class OperationWindow(Frame):
         self.cbDensityPlotType.grid(row=5, column=1, sticky='w')
         self.cbDensityPlotType.configure(takefocus="")
         self.cbDensityPlotType.configure(state=DISABLED)
-        self.cbDensityPlotType.configure(values=('KDE', 'PDP', 'Histogram'))
+        self.cbDensityPlotType.configure(values=('KDE', 'PDP', 'Histogram', 'Silverman', 'Scott'))
         self.cbDensityPlotType.bind('<<ComboboxSelected>>',
                                lambda event: gui_support.onGraphChange(g_graph_settings, 7,
                                                                        self.cbDensityPlotType.current(),
@@ -1598,7 +1598,7 @@ class OperationWindow(Frame):
     def kde_pdp_hist(self):
         # choosing kde/pdp/hist based on user input
         global g_ckde, g_cpdp, g_kde, g_pdp, g_prob_graph_to_draw, g_cum_graph_to_draw, g_prob_title, g_cum_title, g_prob_yaxis_title, g_cum_yaxis_title
-        if g_graph_settings.pdp_kde_hist == 0:
+        if g_graph_settings.pdp_kde_hist in [0,3,4]:
             g_prob_graph_to_draw = g_kde[0]
             g_cum_graph_to_draw = g_kde[2]
             g_prob_title = "Kernel Density Estimates (KDE)"
@@ -1899,6 +1899,8 @@ class OperationWindow(Frame):
     #draws the graph based on the data and user settings. Clears the previous graph, or draws on top of it,
     #depending on user settings
     def clear_and_plot(self, *args):
+        # import pudb
+        # pudb.set_trace() # 1111
         global g_filters, g_grainset, g_number_of_good_grains, g_plot_txt, g_prev_cum, g_prev_prob, g_prev_n, g_pval_dval
         global g_cpdp, g_ckde, g_kde, g_pdp, g_wa_mda
         g_filters.sample_name_filter = []
@@ -1924,6 +1926,22 @@ class OperationWindow(Frame):
         if g_graph_settings.pdp_kde_hist == 0:
             #start_kde = time.time()
             g_kde = g_grainset.kde(g_graph_settings.bandwidth)
+            g_ckde = g_kde[2]
+            #end_kde = time.time()
+            #total_kde = end_kde - start_kde
+            #print("kde: " + str(total_kde))
+
+        elif g_graph_settings.pdp_kde_hist == 3:
+            #start_kde = time.time()
+            g_kde = g_grainset.kde_silverman()
+            g_ckde = g_kde[2]
+            #end_kde = time.time()
+            #total_kde = end_kde - start_kde
+            #print("kde: " + str(total_kde))
+
+        elif g_graph_settings.pdp_kde_hist == 4:
+            #start_kde = time.time()
+            g_kde = g_grainset.kde_scott()
             g_ckde = g_kde[2]
             #end_kde = time.time()
             #total_kde = end_kde - start_kde

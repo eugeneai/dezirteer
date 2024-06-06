@@ -210,7 +210,7 @@ def onGraphChange(p_graph_settings, p_number_in_list, p_value, *args, **kwargs):
         if p_value == 0:
             args[0].configure(state="normal")
             args[1].configure(state="disabled")
-        elif p_value == 1:
+        elif p_value in [1,3,4]:
             args[0].configure(state="disabled")
             args[1].configure(state="disabled")
         else:

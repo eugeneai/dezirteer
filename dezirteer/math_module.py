@@ -8,7 +8,9 @@ from math import sqrt, log, fabs
 import scipy.stats
 #from scipy import std, exp
 from numpy import std, exp
+import numpy as np
 import random
+from scipy.stats import gaussian_kde
 
 pbpb_table =  []
 concordia_table = []
@@ -99,7 +101,7 @@ def compb(age, n):  # Stacey & Cramers 2 stage pb evolution model
 ##        return compb(age, 1) / compb(age, 0)  # 7/6c
 ##    elif n == 4:
 ##        return compb(age, 2) / compb(age, 0)  # 8/6c
-##    else: 
+##    else:
     if age <= 3700:
         if n == 0:
             return 11.152 + 9.735 * (r3700[0] - rage[0])  # 6/4c
@@ -293,7 +295,7 @@ def pbc_corr(zir, corr_type, *args):  # returns Pbc-corrected ages
             corr_age[2] = sqrt(n / d) / 1000000
         else:
             corr_age[2] = corr_age[1]
-        
+
     elif corr_type == 3 and mr82[0] > 0 and mr68[0] > 0 and mr28[0] > 0:  # 208
         t = 1000
         # age
@@ -312,7 +314,7 @@ def pbc_corr(zir, corr_type, *args):  # returns Pbc-corrected ages
             d = b - a
 
         corr_age[0] = a
-        
+
         # error
         e1 = exp(LAMBDA_238 * a * 10**6)
         e2 = exp(LAMBDA_232 * a * 10**6)
@@ -323,7 +325,7 @@ def pbc_corr(zir, corr_type, *args):  # returns Pbc-corrected ages
         n2 = c2 * mr82[1] + mr68[1] ** 2
         n = n1 + n2
         corr_age[1] = sqrt(n / d) / 1000000
-        
+
         if mr68[2] != mr68[1] and mr82[2] != mr82[1]:
             n1 = c1 ** 2 * (mr28[2]/com86) ** 2
             n2 = c2 * mr82[2] + mr68[2] ** 2
@@ -1539,6 +1541,7 @@ class AnalysesSet(object):
                 age = value[0]
                 sum_gauss = sum_gauss + (1 / (p_bandwidth * sqrt2pi)) * exp(
                     (-(p_age_needed - age) ** 2) / (2 * (p_bandwidth) ** 2))
+            # return 1 / len(self.good_set) * sum_gauss
             return 1 / (p_bandwidth * len(self.good_set)) * sum_gauss
 
     # fills and returns a list of kde's for ages from 0 to EarthAge
@@ -1552,6 +1555,44 @@ class AnalysesSet(object):
         # stores cumulate kde
         ckde = 0
         if bool(self.good_set):
+            while index < EarthAge:
+                #start_kde = time.time()
+                curr_kde = self.kde_calc(index, p_bandwidth)
+                #end_kde = time.time()
+                #total_kde = end_kde - start_kde
+                #print("kde at i=" + str(index) + "equals to " + str(total_kde))
+                temp_list.append(curr_kde)
+                ckde += curr_kde
+                if index > 2 and temp_list[int(index/2 - 2)] < temp_list[int(index/2 - 1)] and temp_list[int(index/2)] \
+                        <= temp_list[int(index/2 - 1)]:  # peak recognizing
+                    list_peaks.append(index - 1)
+                index += 2
+            list_kde = [i * (1 / ckde) for i in temp_list]
+
+            list_ckde.append(list_kde[0])
+            for index in range(1, len(list_kde)):
+                list_ckde.append(list_ckde[index - 1] + list_kde[index])
+            return [list_kde, list_peaks, list_ckde]
+
+    # fills and returns a list of kde's for ages from 0 to EarthAge
+    def kde_silverman(self):
+        multiplier = 1
+        index = 0
+        # stores non-normalized kde values:
+        temp_list = []
+        list_peaks = []
+        list_ckde = []
+        # stores cumulate kde
+        ckde = 0
+        if bool(self.good_set):
+            # import pudb
+            # pudb.set_trace() # 1111
+
+            items = [v[0] for k, v in self.good_set.items()]
+            items = np.array(items)
+            _kde = gaussian_kde(items, bw_method='silverman')
+            p_bandwidth = _kde.factor
+            p_bandwidth = p_bandwidth * 100
             while index < EarthAge:
                 #start_kde = time.time()
                 curr_kde = self.kde_calc(index, p_bandwidth)
